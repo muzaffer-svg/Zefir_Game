@@ -89,7 +89,7 @@ void cleanup_room(Room* room) {
 
 void pickup(Room* room, Player* player, const char* item_name) { // oyuncu envanteri boş isse odadaki itemleri almak için kullandıgı fonksiyon
 
-    if (player->inventory_count >= 5) {
+    if (player->inventory_count >= 7) {
         printf("Your inventory is full! You cannot pick up any more items.\n");
         return;
     }
@@ -103,7 +103,7 @@ void pickup(Room* room, Player* player, const char* item_name) { // oyuncu envan
             item_found = 1;
             attack_boost = room->items[i].attack_boost; 
 
-            if (player->inventory_count < 5) {
+            if (player->inventory_count < 7) {
                 strcpy(player->inventory[player->inventory_count], item_name);
                 player->inventory_count++;  
                 player->attack_power += attack_boost;
@@ -196,7 +196,7 @@ int room5_traps(Player* player, Room* room,int* completed_traps) { // tuzak odas
    int player_guess;
 
   printf("\nTrap 1: Solve the following logic question:\n");
-  printf("If a farmer has 17 sheep and all but 9 run away, how many are left?\n");
+  printf("A farmer has 17 sheep. All but 9 ran away. How many sheep are left?\n");
 
   while (1) {
     printf("Enter your answer: ");
