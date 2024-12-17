@@ -3,6 +3,7 @@
 #include <string.h>
 #include <time.h>
 #define MAX_TRAPS 4 
+ 
 
 typedef struct {
     char name[50];
@@ -130,7 +131,7 @@ void clear_buffer() {
 
 
 
-void save_game(Player* player,int* completed_traps) { // oyunu burda kaydediyoruz
+void save_game(Player* player,int completed_traps[]) { // oyunu burda kaydediyoruz
     FILE* file = fopen("save_game.txt", "w");
     if (file == NULL) {
         printf("Error opening file for saving!\n");
@@ -145,14 +146,16 @@ void save_game(Player* player,int* completed_traps) { // oyunu burda kaydediyoru
         fprintf(file, "%s\n", player->inventory[i]);  
     }
 
-    for (int i = 0; i < MAX_TRAPS; i++) { // geçtiği tamamladığı tuzaklar kaydedilir
-        fprintf(file, "%d\n", completed_traps[i]); 
+   
+    for (int i = 0; i < MAX_TRAPS; i++) {
+        fprintf(file, "%d\n", completed_traps[i]);
     }
+    printf("\n");
     fclose(file);  
     printf("Game saved successfully!\n");
 }
 
-int load_game(Player* player,int* completed_traps) { // önceki oynadığı kaydettiği oyun tekrardan yüklenir
+int load_game(Player* player,int completed_traps []) { // önceki oynadığı kaydettiği oyun tekrardan yüklenir
     FILE* file = fopen("save_game.txt", "r");
     if (file == NULL) {
         printf("No saved game found! Starting a new game.\n");
@@ -169,9 +172,14 @@ int load_game(Player* player,int* completed_traps) { // önceki oynadığı kayd
         fscanf(file, "%s", player->inventory[i]); 
     }
 
+    
     for (int i = 0; i < MAX_TRAPS; i++) {
-        fscanf(file, "%d", &completed_traps[i]);
+        if (fscanf(file, "%d", &completed_traps[i]) != 1) { 
+            printf("Error reading trap %d.\n", i);
+            completed_traps[i] = 0; // Hata durumunda sıfırla
+        }
     }
+    printf("\n");
 
     fclose(file); 
     printf("Game loaded successfully!\n");
@@ -179,7 +187,7 @@ int load_game(Player* player,int* completed_traps) { // önceki oynadığı kayd
 }
 
 
-int room5_traps(Player* player, Room* room,int* completed_traps) { // tuzak odası
+int room5_traps(Player* player, Room* room,int completed_traps []) { // tuzak odası
     printf("\n*** Room 5: Trap Room .The trap room. be careful every step of the way, boooom, you could get caught in a trap.***\n");
     char look_choice[10];
     printf("Do you want to take a closer look at the room? You can write 'look' : ");
@@ -196,7 +204,7 @@ int room5_traps(Player* player, Room* room,int* completed_traps) { // tuzak odas
    int player_guess;
 
   printf("\nTrap 1: Solve the following logic question:\n");
-  printf("A farmer has 17 sheep. All but 9 ran away. How many sheep are left?\n");
+  printf("If a farmer has 17 sheep and all but 9 run away, how many are left?\n");
 
   while (1) {
     printf("Enter your answer: ");
@@ -212,7 +220,7 @@ int room5_traps(Player* player, Room* room,int* completed_traps) { // tuzak odas
         printf("Correct! Trap 1 deactivated.\n");
         printf("Your health is now: %d\n", player->health);
         if(!(completed_traps[0])){
-            completed_traps[0]= 1;
+            *(&completed_traps[0])= 1;
             pickup(room, player, "Helmet of Wisdom");
             
         }else{
@@ -246,7 +254,7 @@ while (1) {
             player->health += 10; 
             printf("Your health is now: %d\n", player->health);
             if(!(completed_traps[1])){
-               completed_traps[1] = 1;
+               *(&completed_traps[1]) = 1;
                pickup(room, player, "Shield of Valor");
             
         }else{
@@ -302,7 +310,7 @@ while (1) {
         printf("Correct! Trap 3 deactivated.\n");
         printf("Your health is now: %d\n", player->health);
         if(!(completed_traps[2])){
-            completed_traps[2] = 1;
+            *(&completed_traps[2]) = 1;
             pickup(room, player, "Armor of Light");
             
         }else{
@@ -336,7 +344,7 @@ while (1) {
 }
 
 
-int room6_creature_cards(Player* player, Room* room, Creature** selected_creature_from_room6,int* completed_traps) {// yaratık secme odası ve elmas kılıc alma sansı
+int room6_creature_cards(Player* player, Room* room, Creature** selected_creature_from_room6,int completed_traps []) {// yaratık secme odası ve elmas kılıc alma sansı
     printf("\n*** Room 6: Creature Card Room ***\n");
     printf("Each creature has its own health and attack power. Choose wisely!\n");
     char look_choice[10];
@@ -395,7 +403,7 @@ while (attempts > 0) {
         player->health += 10; 
         printf("Your current health: %d\n", player->health);
         if(!(completed_traps[3])){
-            completed_traps[3] = 1;
+            *(&completed_traps[3]) = 1;
             pickup(room, player, "Diamond Sword");  
             
         }else{
@@ -635,8 +643,6 @@ int main() {
 
     Player player = {"You", 100, 10, 0};
     int completed_traps[MAX_TRAPS];
-    int* ptr = completed_traps;  
-
     Item room5_items[] = { // odalarimdaki itemleri tanimliyoruz
         {"Helmet of Wisdom", 10},
         {"Shield of Valor", 10},
@@ -677,7 +683,7 @@ int main() {
     clear_buffer();
 
     if (load_choice == 'y' || load_choice == 'Y') {
-        if (!load_game(&player,ptr)) {
+        if (!load_game(&player,completed_traps)) {
             for (int i = 0; i < MAX_TRAPS; i++) {
                     completed_traps[i] = 0; // kaydedilmiş oyun bulamazsa geçilen tuzaklar sıfırlanıyor
             }
@@ -716,10 +722,10 @@ int main() {
 
         if (choice == 5) {
             printf("Moving to Room 5...\n");
-            int result = room5_traps(&player, &room5,ptr);
+            int result = room5_traps(&player, &room5,completed_traps);
             if (result == 6) {
                 printf("You are moving to Room 6!\n");
-                int room6_result = room6_creature_cards(&player, &room6,&selected_creature_from_room6,ptr);
+                int room6_result = room6_creature_cards(&player, &room6,&selected_creature_from_room6,completed_traps);
                 if (room6_result == 3) {
                     printf("You are moving to Room 3!\n");
                     int room3_result = room3_chest(&player, &room3,room3_items);
@@ -756,7 +762,7 @@ int main() {
             }
         }else if(choice==6){
             printf("Moving to Room 6...\n");
-            int room6_result = room6_creature_cards(&player, &room6,&selected_creature_from_room6,ptr);
+            int room6_result = room6_creature_cards(&player, &room6,&selected_creature_from_room6,completed_traps);
                 if (room6_result == 3) {
                     printf("You are moving to Room 3!\n");
                     int room3_result = room3_chest(&player, &room3,room3_items);
@@ -772,7 +778,7 @@ int main() {
                 }
         }
          else if (choice == 4) {
-            save_game(&player,ptr);
+            save_game(&player,completed_traps);
             char start_new_game;
             printf("Would you like to start a new game? (y/n): ");
             scanf(" %c", &start_new_game);
@@ -780,7 +786,7 @@ int main() {
 
             if (start_new_game == 'y' || start_new_game == 'Y') {
                 printf("Starting a new game...\n");
-                player = (Player){"Alice", 100, 10, 0, 0};
+                player = (Player){"You", 100, 10, 0, 0};
                  for (int i = 0; i < MAX_TRAPS; i++) {
                     completed_traps[i] = 0;
                 }               
